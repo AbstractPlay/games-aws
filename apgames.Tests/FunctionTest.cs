@@ -8,6 +8,8 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using Amazon.Lambda.APIGatewayEvents;
 
+using Newtonsoft.Json;
+
 using apgames;
 
 namespace apgames.Tests
@@ -19,7 +21,7 @@ namespace apgames.Tests
         }
 
         [Fact]
-        public void TetGetMethod()
+        public void TestIthakaInitMethod()
         {
             TestLambdaContext context;
             APIGatewayProxyRequest request;
@@ -29,10 +31,14 @@ namespace apgames.Tests
 
 
             request = new APIGatewayProxyRequest();
+            request.Body = "{\"mode\": \"init\", \"players\": [\"aaron\", \"adele\"]}";
             context = new TestLambdaContext();
-            response = functions.Get(request, context);
+            response = functions.ProcessIthaka(request, context);
             Assert.Equal(200, response.StatusCode);
-            Assert.Equal("Hello AWS Serverless", response.Body);
+            dynamic body = JsonConvert.DeserializeObject(response.Body);
+            string state = (string)body.state.ToObject(typeof(string));
+            Ithaka g = new Ithaka(state);
+            Assert.Equal(new string[2] { "aaron", "adele" }, g.players);
         }
     }
 }

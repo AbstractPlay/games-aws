@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System.Text;
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
@@ -29,10 +33,18 @@ namespace apgames
     {
         public string state;
         public string version;
-        public string playercounts;
+        public int[] playercounts;
         public string description;
         public string changelog;
         public Variants[] variants;
+    }
+
+    public struct ResponseMove
+    {
+        public string state;
+        public string whoseturn;
+        public string chat;
+        public string renderrep;
     }
 
     public class Functions
@@ -64,15 +76,48 @@ namespace apgames
         /// <returns>The list of blogs</returns>
         public APIGatewayProxyResponse ProcessIthaka(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            context.Logger.LogLine("Get Request\n");
-            var mode = GetParms(request.QueryStringParameters, "mode");
+            dynamic body = JsonConvert.DeserializeObject(request.Body);
+            string mode = (string)body.mode.ToObject(typeof(string));
 
-            APIGatewayProxyResponse response;
+            APIGatewayProxyResponse response = new APIGatewayProxyResponse();
             if (mode == "ping")
             {
                 ResponsePing ret = new ResponsePing()
                 {
-                    state = new Ithaka().state
+                    state = Ithaka.meta_state
+                };
+                response = new APIGatewayProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.OK,
+                    Body = JsonConvert.SerializeObject(ret),
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                };
+            }
+            else if (mode == "metadata")
+            {
+                ResponseMetadata ret = new ResponseMetadata()
+                {
+                    state = Ithaka.meta_state,
+                    version = Ithaka.meta_version,
+                    playercounts = Ithaka.meta_playercounts,
+                    description = Ithaka.meta_description,
+                    changelog = Ithaka.meta_changelog
+                };
+                response = new APIGatewayProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.OK,
+                    Body = JsonConvert.SerializeObject(ret),
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                };
+            }
+            else if (mode == "init")
+            {
+                string[] players = (string[])body.players.ToObject(typeof(string[]));
+                Ithaka g = new Ithaka(players);
+                ResponseMove ret = new ResponseMove()
+                {
+                    state = g.Serialize(),
+                    whoseturn = g.Whoseturn(),
                 };
                 response = new APIGatewayProxyResponse
                 {
@@ -86,8 +131,8 @@ namespace apgames
                 response = new APIGatewayProxyResponse
                 {
                     StatusCode = (int)HttpStatusCode.BadRequest,
-                    Body = "Either you did not provide a 'mode' parameter or what you provided is either not recognized or not supported",
-                    Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+                    Body = JsonConvert.SerializeObject(new Dictionary<string, string> { { "message", "Missing or invalid 'mode' parameter provided. It must be one of 'ping', 'metadata', or 'init'." } }),
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
             }
             return response;
