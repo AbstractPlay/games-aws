@@ -5,13 +5,13 @@
 
   "Resources" : {
 
-    "Get" : {
+    "ProcessIthaka" : {
       "Type" : "AWS::Serverless::Function",
       "Properties": {
-        "Handler": "apgames::apgames.Functions::Get",
+        "Handler": "apgames::apgames.Functions::ProcessIthaka",
         "Runtime": "dotnetcore2.0",
         "CodeUri": "",
-        "MemorySize": 256,
+        "MemorySize": 128,
         "Timeout": 30,
         "Role": null,
         "Policies": [ "AWSLambdaBasicExecutionRole" ],
@@ -19,8 +19,8 @@
           "PutResource": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
-              "Method": "GET"
+              "Path": "/ithaka",
+              "Method": "POST"
             }
           }
         }
