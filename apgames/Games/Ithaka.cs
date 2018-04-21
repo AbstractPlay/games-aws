@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
-namespace apgames
+namespace apgames.Games
 {
     public class Ithaka : Game
     {
@@ -46,6 +47,11 @@ A player can move a piece any number of empty spaces in a line, but they can't m
             if (players.Length != 2)
             {
                 throw new System.ArgumentException("You must pass an array of exactly two strings representing the players.");
+            }
+            var set = new HashSet<string>(players);
+            if (set.Count != players.Length)
+            {
+                throw new System.ArgumentException("The list of players must contain no duplicates.");
             }
             this.players = players;
             this.currplayer = 0;
