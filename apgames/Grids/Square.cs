@@ -111,17 +111,92 @@ namespace apgames.Grids.Square
 
         public HashSet<Edge> Borders()
         {
-            return new HashSet<Edge>();
+            return new HashSet<Edge>()
+            {
+                new Edge(this.x, this.y, Dirs.W),
+                new Edge(this.x, this.y, Dirs.S),
+                new Edge(this.x+1, this.y, Dirs.W),
+                new Edge(this.x, this.y+1, Dirs.S)
+            };
         }
 
         public HashSet<Vertex> Corners()
         {
-            return new HashSet<Vertex>();
+            return new HashSet<Vertex>()
+            {
+                new Vertex(this.x+1, this.y+1),
+                new Vertex(this.x+1, this.y),
+                new Vertex(this.x, this.y),
+                new Vertex(this.x, this.y+1)
+            };
         }
 
         public bool OrthTo(Face obj) => ((this.x == obj.x) || (this.y == obj.y));
 
         public bool DiagTo(Face obj) => Math.Abs(this.x - obj.x) == Math.Abs(this.y - obj.y);
+
+        public Dirs? DirectionTo(Face obj)
+        {
+            if (obj == this)
+            {
+                return null;
+            }
+            if (obj.x == this.x)
+            {
+                if (obj.y > this.y)
+                {
+                    return Dirs.N;
+                } else
+                {
+                    return Dirs.S;
+                }
+            } else if (obj.y == this.y)
+            {
+                if (obj.x > this.x)
+                {
+                    return Dirs.E;
+                } else
+                {
+                    return Dirs.W;
+                }
+            } else if (obj.x > this.x)
+            {
+                if (obj.y > this.y)
+                {
+                    return Dirs.NE;
+                } else
+                {
+                    return Dirs.SE;
+                }
+            } else //if (obj.x < this.x)
+            {
+                if (obj.y > this.y)
+                {
+                    return Dirs.NW;
+                }
+                else
+                {
+                    return Dirs.SW;
+                }
+            }
+        }
+
+        public List<Face> Between(Face obj)
+        {
+            if ( (this == obj) || ( (!this.OrthTo(obj)) && (!this.DiagTo(obj)) ) )
+            {
+                throw new ArgumentException("The two Faces must be directly orthogonal or diagonal from each other.");
+            }
+            List<Face> lst = new List<Face>();
+            Dirs dir = (Dirs)this.DirectionTo(obj);
+            Face next = this.Neighbour(dir);
+            while (next != obj)
+            {
+                lst.Add(next);
+                next = next.Neighbour(dir);
+            }
+            return lst;
+        }
 
         //OVERRIDES
         public override string ToString() => "Face<(" + this.x + ", " + this.y + ")>";
@@ -151,11 +226,127 @@ namespace apgames.Grids.Square
 
     public class Edge
     {
+        public int x, y;
+        public Dirs dir;
 
+        public Edge(int x, int y, Dirs dir)
+        {
+            if ( (dir != Dirs.W) && (dir != Dirs.S) )
+            {
+                throw new ArgumentException("Edges must be West or South.");
+            }
+            this.x = x;
+            this.y = y;
+            this.dir = dir;
+        }
+
+        public HashSet<Face> Joins()
+        {
+            HashSet<Face> set = new HashSet<Face>();
+            if (this.dir == Dirs.W)
+            {
+                set.Add(new Face(this.x, this.y));
+                set.Add(new Face(this.x-1, this.y));
+            } else
+            {
+                set.Add(new Face(this.x, this.y));
+                set.Add(new Face(this.x, this.y-1));
+            }
+            return set;
+        }
+
+        public HashSet<Edge> Continues()
+        {
+            HashSet<Edge> set = new HashSet<Edge>();
+            if (this.dir == Dirs.W)
+            {
+                set.Add(new Edge(this.x, this.y + 1, Dirs.W));
+                set.Add(new Edge(this.x, this.y - 1, Dirs.W));
+            } else
+            {
+                set.Add(new Edge(this.x + 1, this.y, Dirs.S));
+                set.Add(new Edge(this.x - 1, this.y, Dirs.S));
+            }
+            return set;
+        }
+
+        public HashSet<Vertex> Endpoints()
+        {
+            HashSet<Vertex> set = new HashSet<Vertex>();
+            if (this.dir == Dirs.W)
+            {
+                set.Add(new Vertex(this.x, this.y));
+                set.Add(new Vertex(this.x, this.y+1));
+            } else
+            {
+                set.Add(new Vertex(this.x, this.y));
+                set.Add(new Vertex(this.x+1, this.y));
+            }
+            return set;
+        }
+
+        //Overrides
+        public override string ToString() => "Edge<(" + this.x + ", " + this.y + ")>";
+
+        public static bool operator ==(Edge lhs, Edge rhs)
+        {
+            if ((lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.dir == rhs.dir))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static bool operator !=(Edge lhs, Edge rhs)
+        {
+            if ((lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.dir == rhs.dir))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public override bool Equals(Object obj) => obj is Edge && this == (Edge)obj;
+
+        public override int GetHashCode() => this.x ^ this.y ^ (int)this.dir;
     }
 
-    public class Vertex
+    public class Vertex : Face
     {
+        public Vertex (int x, int y) : base(x,y) { }
+        public override string ToString() => "Vertex<(" + this.x + ", " + this.y + ")>";
 
+        public HashSet<Face> Touches()
+        {
+            return new HashSet<Face>()
+            {
+                new Face(this.x, this.y),
+                new Face(this.x, this.y-1),
+                new Face(this.x-1, this.y-1),
+                new Face(this.x-1, this.y)
+            };
+        }
+
+        public HashSet<Edge> Protrudes()
+        {
+            return new HashSet<Edge>()
+            {
+                new Edge(this.x, this.y, Dirs.W),
+                new Edge(this.x, this.y, Dirs.S),
+                new Edge(this.x, this.y-1, Dirs.W),
+                new Edge(this.x-1, this.y, Dirs.S),
+            };
+        }
+
+        public HashSet<Vertex> Adjacent()
+        {
+            return new HashSet<Vertex>()
+            {
+                new Vertex(this.x, this.y+1),
+                new Vertex(this.x+1, this.y),
+                new Vertex(this.x, this.y-1),
+                new Vertex(this.x-1, this.y)
+            };
+        }
     }
 }

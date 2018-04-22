@@ -113,6 +113,33 @@ namespace apgames.Tests
             Assert.True(baseface.DiagTo(new Face(-4, -4)));
             Assert.False(baseface.DiagTo(new Face(0, 1)));
             Assert.False(baseface.DiagTo(new Face(2, 5)));
+            Assert.Null(baseface.DirectionTo(baseface));
+            Assert.Equal(Dirs.N, baseface.DirectionTo(new Face(0, 10)));
+            Assert.Equal(Dirs.NE, baseface.DirectionTo(new Face(2, 5)));
+            Assert.Equal(Dirs.E, baseface.DirectionTo(new Face(5, 0)));
+            Assert.Equal(Dirs.SE, baseface.DirectionTo(new Face(3, -3)));
+            Assert.Equal(Dirs.S, baseface.DirectionTo(new Face(0, -3)));
+            Assert.Equal(Dirs.SW, baseface.DirectionTo(new Face(-3, -5)));
+            Assert.Equal(Dirs.W, baseface.DirectionTo(new Face(-5, 0)));
+            Assert.Equal(Dirs.NW, baseface.DirectionTo(new Face(-1, 1)));
+
+            //Action nullobj = () => baseface.Between(null);
+            //Assert.Throws<ArgumentException>(nullobj);
+            Action eqobj = () => baseface.Between(baseface);
+            Assert.Throws<ArgumentException>(eqobj);
+            Action eccentric = () => baseface.Between(new Face(1, 20));
+            Assert.Throws<ArgumentException>(eccentric);
+            List<Face> comp = new List<Face>()
+            {
+                new Face(1,1),
+                new Face(2,2),
+                new Face(3,3)
+            };
+            Assert.Equal(comp, baseface.Between(new Face(4, 4)));
+
+            //Edge
+
+            //Vertex
         }
 
         [Fact]
