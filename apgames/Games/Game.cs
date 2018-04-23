@@ -16,6 +16,7 @@ namespace apgames.Games
         public string[] players;
         public int currplayer;
         public string lastmove;
+        public bool gameover = false;
 
         public string genState()
         {

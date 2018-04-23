@@ -140,6 +140,33 @@ namespace apgames.Tests
             //Edge
 
             //Vertex
+
+            //SquareFixed
+            SquareFixed basegrid = new SquareFixed(2, 2);
+            Assert.Equal(
+                new HashSet<Face>() { new Face(0, 0), new Face(0, 1), new Face(1, 0), new Face(1, 1) },
+                basegrid.Faces()
+            );
+            Assert.Equal(
+                new HashSet<Vertex>() { new Vertex(0,0), new Vertex(1, 0), new Vertex(2, 0), new Vertex(0, 1), new Vertex(1, 1), new Vertex(2, 1), new Vertex(0, 2), new Vertex(1, 2), new Vertex(2, 2) },
+                basegrid.Vertices()
+            );
+            Assert.Equal(
+                new HashSet<Edge>() { new Edge(0, 0, Dirs.W), new Edge(0, 0, Dirs.S), new Edge(0, 1, Dirs.W), new Edge(0, 1, Dirs.S), new Edge(1, 0, Dirs.W), new Edge(1, 0, Dirs.S), new Edge(1, 1, Dirs.W), new Edge(1, 1, Dirs.S), new Edge(0, 2, Dirs.S), new Edge(1, 2, Dirs.S), new Edge(2, 1, Dirs.W), new Edge(2, 0, Dirs.W) },
+                basegrid.Edges()
+            );
+            Assert.Equal((double)0, basegrid.Face2FlatIdx(new Face(0, 0)));
+            Assert.Equal((double)1, basegrid.Face2FlatIdx(new Face(1, 0)));
+            Assert.Equal((double)2, basegrid.Face2FlatIdx(new Face(0, 1)));
+            Assert.Equal((double)3, basegrid.Face2FlatIdx(new Face(1, 1)));
+            Action badface = () => basegrid.Face2FlatIdx(new Face(2, 2));
+            Assert.Throws<ArgumentException>(badface);
+            Assert.Equal(new Face(0, 0), basegrid.FlatIdx2Face(0));
+            Assert.Equal(new Face(1, 0), basegrid.FlatIdx2Face(1));
+            Assert.Equal(new Face(0, 1), basegrid.FlatIdx2Face(2));
+            Assert.Equal(new Face(1, 1), basegrid.FlatIdx2Face(3));
+            Assert.True(basegrid.ContainsFace(new Face(1, 1)));
+            Assert.False(basegrid.ContainsFace(new Face(10, 10)));
         }
 
         [Fact]
@@ -150,7 +177,43 @@ namespace apgames.Tests
             Action b = () => new Ithaka(new string[1] { "aaron" });
             Assert.Throws<System.ArgumentException>(a);
             Assert.Throws<System.ArgumentException>(b);
-            //
+
+            //LegalMoves
+            Ithaka basegame = new Ithaka(new string[2] { "aaron", "adele" });
+            HashSet<string> moves = new HashSet<string>()
+            {
+                "a1-b2",
+                "b1-b2", "b1-c2",
+                "c1-b2", "c1-c2",
+                "d1-c2",
+                "a2-b2", "a2-b3",
+                "d2-c2", "d2-c3",
+                "a3-b2", "a3-b3",
+                "d3-c2", "d3-c3",
+                "a4-b3", 
+                "b4-b3", "b4-c3",
+                "c4-b3", "c4-c3",
+                "d4-c3"
+            };
+            HashSet<string> actual = new HashSet<string>(basegame.LegalMoves());
+            Assert.Equal(moves, actual);
+
+            //Move
+            Action wrongplayer = () => basegame.Move("adele", "a1-b2");
+            Assert.Throws<ArgumentOutOfRangeException>(wrongplayer);
+            Action badmoveform = () => basegame.Move("aaron", "asdf");
+            Assert.Throws<ArgumentException>(badmoveform);
+            Action fromoor = () => basegame.Move("aaron", "z1-b2");
+            Action fromempty = () => basegame.Move("aaron", "b2-b3");
+            Assert.Throws<ArgumentException>(fromoor);
+            Assert.Throws<ArgumentException>(fromempty);
+            Action tooor = () => basegame.Move("aaron", "a1-z10");
+            Action tofar = () => basegame.Move("aaron", "a1-c3");
+            Action toocc = () => basegame.Move("aaron", "a1-b1");
+            Assert.Throws<ArgumentException>(tooor);
+            Assert.Throws<ArgumentException>(tofar);
+            Assert.Throws<ArgumentException>(toocc);
+            basegame.Move("aaron", "a1-b2");
         }
     }
 }

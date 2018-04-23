@@ -2,12 +2,26 @@
 using System.Collections.Generic;
 using System.Text;
 
+// http://www-cs-students.stanford.edu/~amitp/game-programming/grids/
+
 namespace apgames.Grids.Square
 {
     public enum Dirs : uint { N, NE, E, SE, S, SW, W, NW };
 
     public static class Common
     {
+        public static Dictionary<Dirs, Dirs> opps = new Dictionary<Dirs, Dirs>()
+        {
+            {Dirs.N, Dirs.S },
+            {Dirs.NE, Dirs.SW },
+            {Dirs.E, Dirs.W },
+            {Dirs.SE, Dirs.NW },
+            {Dirs.S, Dirs.N },
+            {Dirs.SW, Dirs.NE },
+            {Dirs.W, Dirs.E },
+            {Dirs.NW, Dirs.SE }
+        };
+
         public static Tuple<int, int> Label2Coords(string lbl)
         {
             if (lbl.Length < 2)
@@ -18,7 +32,7 @@ namespace apgames.Grids.Square
             int x = (int)letter - (int)'a';
             if ( (x < 0) || (x > 25) )
             {
-                throw new System.ArgumentException("The first character must be the lowercase letter 'a' through 'z'.");
+                throw new System.ArgumentException("The first character must be the letter 'a' through 'z'.");
             }
 
             string number = lbl.Substring(1);
@@ -59,17 +73,6 @@ namespace apgames.Grids.Square
             {Dirs.W, new Tuple<int, int>(-1,0) },
             {Dirs.NW, new Tuple<int, int>(-1,1) }
         };
-        public static Dictionary<Dirs, Dirs> opps = new Dictionary<Dirs, Dirs>()
-        {
-            {Dirs.N, Dirs.S },
-            {Dirs.NE, Dirs.SW },
-            {Dirs.E, Dirs.W },
-            {Dirs.SE, Dirs.NW },
-            {Dirs.S, Dirs.N },
-            {Dirs.SW, Dirs.NE },
-            {Dirs.W, Dirs.E },
-            {Dirs.NW, Dirs.SE }
-        };
         public int x, y;
 
         public Face(int x, int y)
@@ -78,25 +81,25 @@ namespace apgames.Grids.Square
             this.y = y;
         }
 
-        public Face(string label)
+        public Face(Tuple<int, int> coords) : this(coords.Item1, coords.Item2) { }
+
+        public Face(string label) : this(Common.Label2Coords(label)) { }
+
+        public string ToLabel()
         {
-            var coords = Common.Label2Coords(label);
-            this.x = coords.Item1;
-            this.y = coords.Item2;
+            return Common.Coords2Label(this.x, this.y);
         }
 
-        public HashSet<Face> Neighbours(bool diag=false)
+        public IEnumerable<Face> Neighbours(bool diag=false)
         {
-            HashSet<Face> ns = new HashSet<Face>();
             foreach (KeyValuePair<Dirs, Tuple<int,int>> entry in offsets) 
             {
                 //Even-numbered Dirs are orth
-                if ( ((uint)entry.Key % 2 == 0) || (diag) )
+                if ( (diag) || ((uint)entry.Key % 2 == 0) )
                 {
-                    ns.Add(new Face(this.x + entry.Value.Item1, this.y + entry.Value.Item2));
+                    yield return new Face(this.x + entry.Value.Item1, this.y + entry.Value.Item2);
                 }
             }
-            return ns;
         }
 
         public Face Neighbour(Dirs dir, int dist=1)
@@ -109,26 +112,20 @@ namespace apgames.Grids.Square
             return new Face(this.x + (val.Item1 * dist), this.y + (val.Item2 * dist));
         }
 
-        public HashSet<Edge> Borders()
+        public IEnumerable<Edge> Borders()
         {
-            return new HashSet<Edge>()
-            {
-                new Edge(this.x, this.y, Dirs.W),
-                new Edge(this.x, this.y, Dirs.S),
-                new Edge(this.x+1, this.y, Dirs.W),
-                new Edge(this.x, this.y+1, Dirs.S)
-            };
+            yield return new Edge(this.x, this.y, Dirs.W);
+            yield return new Edge(this.x, this.y, Dirs.S);
+            yield return new Edge(this.x + 1, this.y, Dirs.W);
+            yield return new Edge(this.x, this.y + 1, Dirs.S);
         }
 
-        public HashSet<Vertex> Corners()
+        public IEnumerable<Vertex> Corners()
         {
-            return new HashSet<Vertex>()
-            {
-                new Vertex(this.x+1, this.y+1),
-                new Vertex(this.x+1, this.y),
-                new Vertex(this.x, this.y),
-                new Vertex(this.x, this.y+1)
-            };
+            yield return new Vertex(this.x + 1, this.y + 1);
+            yield return new Vertex(this.x + 1, this.y);
+            yield return new Vertex(this.x, this.y);
+            yield return new Vertex(this.x, this.y + 1);
         }
 
         public bool OrthTo(Face obj) => ((this.x == obj.x) || (this.y == obj.y));
@@ -198,6 +195,8 @@ namespace apgames.Grids.Square
             return lst;
         }
 
+        public int OrthDistance(Face obj) => Math.Abs(this.x - obj.x) + Math.Abs(this.y - obj.y);
+
         //OVERRIDES
         public override string ToString() => "Face<(" + this.x + ", " + this.y + ")>";
 
@@ -240,49 +239,43 @@ namespace apgames.Grids.Square
             this.dir = dir;
         }
 
-        public HashSet<Face> Joins()
+        public IEnumerable<Face> Joins()
         {
-            HashSet<Face> set = new HashSet<Face>();
             if (this.dir == Dirs.W)
             {
-                set.Add(new Face(this.x, this.y));
-                set.Add(new Face(this.x-1, this.y));
+                yield return new Face(this.x, this.y);
+                yield return new Face(this.x-1, this.y);
             } else
             {
-                set.Add(new Face(this.x, this.y));
-                set.Add(new Face(this.x, this.y-1));
+                yield return new Face(this.x, this.y);
+                yield return new Face(this.x, this.y-1);
             }
-            return set;
         }
 
-        public HashSet<Edge> Continues()
+        public IEnumerable<Edge> Continues()
         {
-            HashSet<Edge> set = new HashSet<Edge>();
             if (this.dir == Dirs.W)
             {
-                set.Add(new Edge(this.x, this.y + 1, Dirs.W));
-                set.Add(new Edge(this.x, this.y - 1, Dirs.W));
+                yield return new Edge(this.x, this.y + 1, Dirs.W);
+                yield return new Edge(this.x, this.y - 1, Dirs.W);
             } else
             {
-                set.Add(new Edge(this.x + 1, this.y, Dirs.S));
-                set.Add(new Edge(this.x - 1, this.y, Dirs.S));
+                yield return new Edge(this.x + 1, this.y, Dirs.S);
+                yield return new Edge(this.x - 1, this.y, Dirs.S);
             }
-            return set;
         }
 
-        public HashSet<Vertex> Endpoints()
+        public IEnumerable<Vertex> Endpoints()
         {
-            HashSet<Vertex> set = new HashSet<Vertex>();
             if (this.dir == Dirs.W)
             {
-                set.Add(new Vertex(this.x, this.y));
-                set.Add(new Vertex(this.x, this.y+1));
+                yield return new Vertex(this.x, this.y);
+                yield return new Vertex(this.x, this.y+1);
             } else
             {
-                set.Add(new Vertex(this.x, this.y));
-                set.Add(new Vertex(this.x+1, this.y));
+                yield return new Vertex(this.x, this.y);
+                yield return new Vertex(this.x+1, this.y);
             }
-            return set;
         }
 
         //Overrides
@@ -316,37 +309,158 @@ namespace apgames.Grids.Square
         public Vertex (int x, int y) : base(x,y) { }
         public override string ToString() => "Vertex<(" + this.x + ", " + this.y + ")>";
 
-        public HashSet<Face> Touches()
+        public IEnumerable<Face> Touches()
         {
-            return new HashSet<Face>()
-            {
-                new Face(this.x, this.y),
-                new Face(this.x, this.y-1),
-                new Face(this.x-1, this.y-1),
-                new Face(this.x-1, this.y)
-            };
+            yield return new Face(this.x, this.y);
+            yield return new Face(this.x, this.y - 1);
+            yield return new Face(this.x - 1, this.y - 1);
+            yield return new Face(this.x - 1, this.y);
         }
 
-        public HashSet<Edge> Protrudes()
+        public IEnumerable<Edge> Protrudes()
         {
-            return new HashSet<Edge>()
-            {
-                new Edge(this.x, this.y, Dirs.W),
-                new Edge(this.x, this.y, Dirs.S),
-                new Edge(this.x, this.y-1, Dirs.W),
-                new Edge(this.x-1, this.y, Dirs.S),
-            };
+            yield return new Edge(this.x, this.y, Dirs.W);
+            yield return new Edge(this.x, this.y, Dirs.S);
+            yield return new Edge(this.x, this.y - 1, Dirs.W);
+            yield return new Edge(this.x - 1, this.y, Dirs.S);
         }
 
-        public HashSet<Vertex> Adjacent()
+        public IEnumerable<Vertex> Adjacent()
         {
-            return new HashSet<Vertex>()
+            yield return new Vertex(this.x, this.y + 1);
+            yield return new Vertex(this.x + 1, this.y);
+            yield return new Vertex(this.x, this.y - 1);
+            yield return new Vertex(this.x - 1, this.y);
+        }
+    }
+
+    public class Square
+    {
+
+    }
+
+    public class SquareFixed
+    {
+        public uint width, height;
+
+        public SquareFixed(uint width, uint height)
+            : base()
+        {
+            this.width = width;
+            this.height = height;
+        }
+
+        public IEnumerable<Face> Faces()
+        {
+            for (int x=0; x<this.width; x++)
             {
-                new Vertex(this.x, this.y+1),
-                new Vertex(this.x+1, this.y),
-                new Vertex(this.x, this.y-1),
-                new Vertex(this.x-1, this.y)
-            };
+                for (int y=0; y<this.height; y++)
+                {
+                    yield return new Face(x, y);
+                }
+            }
+        }
+
+        public int Face2FlatIdx(Face f)
+        {
+            if ( (f.x >= this.width) || (f.y >= this.height) )
+            {
+                throw new ArgumentException("The Face lies outside the defined grid.");
+            }
+            return (int)(f.y * this.width) + f.x;
+        }
+
+        public Face FlatIdx2Face(uint idx)
+        {
+            uint y = idx / this.width;
+            uint x = idx % this.width;
+            return new Face((int)x, (int)y);
+        }
+
+        public HashSet<Vertex> Vertices()
+        {
+            HashSet<Vertex> set = new HashSet<Vertex>();
+            foreach (Face f in this.Faces())
+            {
+                set.UnionWith(f.Corners());
+            }
+            return set;
+        }
+
+        public HashSet<Edge> Edges()
+        {
+            HashSet<Edge> set = new HashSet<Edge>();
+            foreach (Face f in this.Faces())
+            {
+                set.UnionWith(f.Borders());
+            }
+            return set;
+        }
+
+        public IEnumerable<Face> Row(uint rownum)
+        {
+            if (rownum > this.height)
+            {
+                throw new ArgumentException("The requested row doesn't exist.");
+            }
+            for (int x=0; x<this.width; x++)
+            {
+                yield return new Face(x, (int)rownum);
+            }
+        }
+
+        public IEnumerable<List<Face>> Rows()
+        {
+            for (uint y=0; y<this.height; y++)
+            {
+                yield return new List<Face>(this.Row(y));
+            }
+        }
+
+        public IEnumerable<Face> Col(uint colnum)
+        {
+            if (colnum > this.height)
+            {
+                throw new ArgumentException("The requested col doesn't exist.");
+            }
+            for (int x = 0; x < this.width; x++)
+            {
+                yield return new Face(x, (int)colnum);
+            }
+        }
+
+        public IEnumerable<List<Face>> Cols()
+        {
+            for (uint x = 0; x < this.width; x++)
+            {
+                yield return new List<Face>(this.Col(x));
+            }
+        }
+
+        public IEnumerable<List<Face>> Diags()
+        {
+            List<Face> lst = new List<Face>();
+            for (int i=0; i<this.height; i++)
+            {
+                lst.Add(new Face(i, i));
+            }
+            yield return lst;
+
+            lst = new List<Face>();
+            for (int i=0; i<this.height; i++)
+            {
+                lst.Add(new Face(i, (int)this.height - 1 - i));
+            }
+            yield return lst;
+        }
+
+        public bool ContainsFace(Face obj)
+        {
+            if ( (obj.x >= 0) && (obj.x < this.width) && (obj.y >= 0) && (obj.y < this.height) )
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
