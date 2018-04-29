@@ -43,9 +43,15 @@ namespace apgames
     public struct ResponseMove
     {
         public string state;
-        public string whoseturn;
+        public int[] whoseturn;
         public string chat;
         public string renderrep;
+    }
+
+    public struct ResponseError
+    {
+        public string request;
+        public string message;
     }
 
     public class Functions
@@ -113,12 +119,52 @@ namespace apgames
             }
             else if (mode == "init")
             {
-                string[] players = (string[])body.players.ToObject(typeof(string[]));
+                int[] players = (int[])body.players.ToObject(typeof(int[]));
                 Ithaka g = new Ithaka(players);
                 ResponseMove ret = new ResponseMove()
                 {
                     state = g.Serialize(),
-                    whoseturn = g.Whoseturn(),
+                    whoseturn = new int[1] { g.Whoseturn() },
+                    renderrep = g.Render()
+                };
+                response = new APIGatewayProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.OK,
+                    Body = JsonConvert.SerializeObject(ret),
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                };
+            }
+            else if (mode == "move")
+            {
+                int player = body.player;
+                string move = body.move;
+                string state = body.state;
+                Ithaka g;
+                try
+                {
+                    g = new Ithaka(state);
+                    g.Move(player, move);
+                } catch (Exception e)
+                {
+                    ResponseError r = new ResponseError()
+                    {
+                        request = JsonConvert.SerializeObject(body),
+                        message = e.ToString()
+                    };
+                    response = new APIGatewayProxyResponse
+                    {
+                        StatusCode = (int)HttpStatusCode.BadRequest,
+                        Body = JsonConvert.SerializeObject(r),
+                        Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                    };
+                    return response;
+                }
+                ResponseMove ret = new ResponseMove()
+                {
+                    state = g.Serialize(),
+                    whoseturn = new int[1] { g.Whoseturn() },
+                    renderrep = g.Render(),
+                    chat = String.Join('\n', g.chatmsgs.ToArray())
                 };
                 response = new APIGatewayProxyResponse
                 {
@@ -132,7 +178,7 @@ namespace apgames
                 response = new APIGatewayProxyResponse
                 {
                     StatusCode = (int)HttpStatusCode.BadRequest,
-                    Body = JsonConvert.SerializeObject(new Dictionary<string, string> { { "message", "Missing or invalid 'mode' parameter provided. It must be one of 'ping', 'metadata', or 'init'." } }),
+                    Body = JsonConvert.SerializeObject(new Dictionary<string, string> { { "message", "Missing or invalid 'mode' parameter provided. It must be one of 'ping', 'metadata', 'init', or 'move'." } }),
                     Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
                 };
             }
