@@ -46,3 +46,7 @@ The [main website](https://www.abstractplay.com) houses the development blog and
 29 Apr 2018:
 
 * I have Ithaka fully functioning now. This is the template I'll use for all other games. But I won't do any more games until the full user workflow is working for this one game.
+
+20 Apr 2018:
+
+* Initial commit of the new code. The basics are working, which is exciting.
