@@ -47,14 +47,14 @@ A player can move a piece any number of empty spaces in a line, but they can't m
         private Dictionary<string, int> states;
         public struct Serialized
         {
-            public int[] players;
+            public string[] players;
             public int currplayer;
             public string board;
             public int lastmoved;
             public string lastmove;
             public Dictionary<string, int> states;
             public bool gameover;
-            public int winner;
+            public string winner;
         };
         public struct Rendered
         {
@@ -66,13 +66,13 @@ A player can move a piece any number of empty spaces in a line, but they can't m
         };
         private Regex re_validmove = new Regex(@"^([a-z][1-4])\-([a-z][1-4])$", RegexOptions.IgnoreCase);
 
-        public Ithaka(int[] players)
+        public Ithaka(string[] players)
         {
             if (players.Length != 2)
             {
                 throw new System.ArgumentException("You must pass an array of exactly two strings representing the players.");
             }
-            var set = new HashSet<int>(players);
+            var set = new HashSet<string>(players);
             if (set.Count != players.Length)
             {
                 throw new System.ArgumentException("The list of players must contain no duplicates.");
@@ -179,7 +179,7 @@ A player can move a piece any number of empty spaces in a line, but they can't m
             }
         }
 
-        public Ithaka Move(int player, string move)
+        public Ithaka Move(string player, string move)
         {
             move = move.ToLower();
             if (gameover)

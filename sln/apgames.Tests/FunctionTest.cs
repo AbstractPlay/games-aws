@@ -44,11 +44,11 @@ namespace apgames.Tests
             dynamic body = JsonConvert.DeserializeObject(response.Body);
             string state = (string)body.state.ToObject(typeof(string));
             Ithaka g = new Ithaka(state);
-            Assert.Equal(new int[2] { 10, 20 }, g.players);
+            Assert.Equal(new string[2] { "10", "20" }, g.players);
 
             //move
             request = new APIGatewayProxyRequest();
-            request.Body = "{\"mode\": \"move\", \"player\": 20, \"move\": \"a1-b2\", \"state\": "+JsonConvert.ToString(state)+"}";
+            request.Body = "{\"mode\": \"move\", \"player\": \"20\", \"move\": \"a1-b2\", \"state\": "+JsonConvert.ToString(state)+"}";
             context = new TestLambdaContext();
             response = functions.ProcessIthaka(request, context);
             Assert.Equal(400, response.StatusCode);
@@ -178,13 +178,13 @@ namespace apgames.Tests
         public void TestIthakaClassMethod()
         {
             //constructor
-            Action a = () => new Ithaka(new int[2] { 10, 10 });
-            Action b = () => new Ithaka(new int[1] { 10 });
+            Action a = () => new Ithaka(new string[2] { "10", "10" });
+            Action b = () => new Ithaka(new string[1] { "10" });
             Assert.Throws<System.ArgumentException>(a);
             Assert.Throws<System.ArgumentException>(b);
 
             //LegalMoves
-            Ithaka basegame = new Ithaka(new int[2] { 10, 20 });
+            Ithaka basegame = new Ithaka(new string[2] { "10", "20" });
             HashSet<string> moves = new HashSet<string>()
             {
                 "a1-b2", "a1-c3",
@@ -204,28 +204,28 @@ namespace apgames.Tests
             Assert.Equal(moves, actual);
 
             //Move
-            Action wrongplayer = () => basegame.Move(20, "a1-b2");
+            Action wrongplayer = () => basegame.Move("20", "a1-b2");
             Assert.Throws<ArgumentOutOfRangeException>(wrongplayer);
-            Action badmoveform = () => basegame.Move(10, "asdf");
+            Action badmoveform = () => basegame.Move("10", "asdf");
             Assert.Throws<ArgumentException>(badmoveform);
-            Action fromoor = () => basegame.Move(10, "z1-b2");
-            Action fromempty = () => basegame.Move(10, "b2-b3");
+            Action fromoor = () => basegame.Move("10", "z1-b2");
+            Action fromempty = () => basegame.Move("10", "b2-b3");
             Assert.Throws<ArgumentException>(fromoor);
             Assert.Throws<ArgumentException>(fromempty);
-            Action tooor = () => basegame.Move(10, "a1-z10");
-            Action toocc = () => basegame.Move(10, "a1-b1");
+            Action tooor = () => basegame.Move("10", "a1-z10");
+            Action toocc = () => basegame.Move("10", "a1-b1");
             Assert.Throws<ArgumentException>(tooor);
             Assert.Throws<ArgumentException>(toocc);
-            basegame.Move(10, "a1-b2");
+            basegame.Move("10", "a1-b2");
             Assert.Equal(1, basegame.currplayer);
             Assert.Equal("-YRRYY-RB--GBBGG", new string(basegame.board));
             Assert.False(basegame.gameover);
-            basegame.Move(20, "a3-c3");
+            basegame.Move("20", "a3-c3");
             Assert.False(basegame.gameover);
-            basegame.Move(10, "b1-c2");
+            basegame.Move("10", "b1-c2");
             Assert.Equal("--RRYYYR--BGBBGG", new string(basegame.board));
             Assert.True(basegame.gameover);
-            Assert.Equal(10, basegame.winner);
+            Assert.Equal("10", basegame.winner);
         }
     }
 }

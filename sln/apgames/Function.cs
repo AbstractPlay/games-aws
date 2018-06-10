@@ -43,7 +43,7 @@ namespace apgames
     public struct ResponseMove
     {
         public string state;
-        public int[] whoseturn;
+        public string[] whoseturn;
         public string chat;
         public string renderrep;
     }
@@ -97,7 +97,7 @@ namespace apgames
                 {
                     StatusCode = (int)HttpStatusCode.OK,
                     Body = JsonConvert.SerializeObject(ret),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json; charset=utf-8" } }
                 };
             }
             else if (mode == "metadata")
@@ -114,29 +114,29 @@ namespace apgames
                 {
                     StatusCode = (int)HttpStatusCode.OK,
                     Body = JsonConvert.SerializeObject(ret),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json; charset=utf-8" } }
                 };
             }
             else if (mode == "init")
             {
-                int[] players = (int[])body.players.ToObject(typeof(int[]));
+                string[] players = (string[])body.players.ToObject(typeof(string[]));
                 Ithaka g = new Ithaka(players);
                 ResponseMove ret = new ResponseMove()
                 {
                     state = g.Serialize(),
-                    whoseturn = new int[1] { g.Whoseturn() },
+                    whoseturn = new string[1] { g.Whoseturn() },
                     renderrep = g.Render()
                 };
                 response = new APIGatewayProxyResponse
                 {
                     StatusCode = (int)HttpStatusCode.OK,
                     Body = JsonConvert.SerializeObject(ret),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json; charset=utf-8" } }
                 };
             }
             else if (mode == "move")
             {
-                int player = body.player;
+                string player = body.player;
                 string move = body.move;
                 string state = body.state;
                 Ithaka g;
@@ -155,14 +155,14 @@ namespace apgames
                     {
                         StatusCode = (int)HttpStatusCode.BadRequest,
                         Body = JsonConvert.SerializeObject(r),
-                        Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                        Headers = new Dictionary<string, string> { { "Content-Type", "application/json; charset=utf-8" } }
                     };
                     return response;
                 }
                 ResponseMove ret = new ResponseMove()
                 {
                     state = g.Serialize(),
-                    whoseturn = new int[1] { g.Whoseturn() },
+                    whoseturn = new string[1] { g.Whoseturn() },
                     renderrep = g.Render(),
                     chat = String.Join('\n', g.chatmsgs.ToArray())
                 };
@@ -170,7 +170,7 @@ namespace apgames
                 {
                     StatusCode = (int)HttpStatusCode.OK,
                     Body = JsonConvert.SerializeObject(ret),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json; charset=utf-8" } }
                 };
             }
             else
@@ -179,7 +179,7 @@ namespace apgames
                 {
                     StatusCode = (int)HttpStatusCode.BadRequest,
                     Body = JsonConvert.SerializeObject(new Dictionary<string, string> { { "message", "Missing or invalid 'mode' parameter provided. It must be one of 'ping', 'metadata', 'init', or 'move'." } }),
-                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                    Headers = new Dictionary<string, string> { { "Content-Type", "application/json; charset=utf-8" } }
                 };
             }
             return response;

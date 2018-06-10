@@ -8,6 +8,10 @@ The [main website](https://www.abstractplay.com) houses the development blog and
 
 ## Change log
 
+10 Jun 2018:
+
+* Moved to [Serverless framework](https://serverless.com) for deployment.
+
 29 Apr 2018:
 
 * I have Ithaka fully functioning now. This is the template I'll use for all other games. But I won't do any more games until the full user workflow is working for this one game.
@@ -16,38 +20,11 @@ The [main website](https://www.abstractplay.com) houses the development blog and
 
 * Initial commit of the new code. The basics are working, which is exciting.
 
-## Deploy 
+## Deploy
 
-This AWS-specific files are as follows:
-* serverless.template - an AWS CloudFormation Serverless Application Model template file for declaring your Serverless functions and other AWS resources
-* Function.cs - class file containing the C# method mapped to the single function declared in the template file
-* aws-lambda-tools-defaults.json - default argument settings for use with Visual Studio and command line deployment tools for AWS
-
-### Here are some steps to follow from Visual Studio:
-
-To deploy your Serverless application, right click the project in Solution Explorer and select *Publish to AWS Lambda*.
-
-To view your deployed application open the Stack View window by double-clicking the stack name shown beneath the AWS CloudFormation node in the AWS Explorer tree. The Stack View also displays the root URL to your published application.
-
-### Here are some steps to follow to get started from the command line:
-
-Once you have edited your template and code you can use the following command lines to deploy your application from the command line (these examples assume the project name is *EmptyServerless*):
-
-Restore dependencies
-```
-    cd "apgames"
-    dotnet restore
-```
-
-Execute unit tests
-```
-    cd "apgames/test/apgames.Tests"
-    dotnet test
-```
-
-Deploy application
-```
-    cd "apgames/src/apgames"
-    dotnet lambda deploy-serverless
-```
-
+* Make sure you have `dotnet` and `serverless` installed.
+* Clone the repo.
+* Run `npm install` to install the plugins.
+* Configure `serverless` with your own credentials.
+* Create the `apsecrets.yml` file with the entries you see in `serverless.yml` or enter your information directly.
+* Run `serverless deploy`.

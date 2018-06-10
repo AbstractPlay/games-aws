@@ -15,14 +15,14 @@ namespace apgames.Games
         public static string meta_state;
         */
 
-        public int[] players;
+        public string[] players;
         public int currplayer;
         public string lastmove;
         public bool gameover = false;
-        public int winner;
+        public string winner;
         public List<string> chatmsgs;
 
-        public int Whoseturn()
+        public string Whoseturn()
         {
             return this.players[this.currplayer];
         }
