@@ -17,7 +17,8 @@ plugins:
   - serverless-dotnet
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
-  #- serverless-domain-manager
+  - serverless-domain-manager
+  - serverless-plugin-warmup
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -29,18 +30,6 @@ provider:
   memorySize: 256
   timeout: 30
   versionFunctions: false
-  environment:
-    db_server: ${file(../apsecrets.yml):db_server}
-    db_database: ${file(../apsecrets.yml):db_database}
-    db_username: ${file(../apsecrets.yml):db_username}
-    db_password: ${file(../apsecrets.yml):db_password}
-  vpc:
-    securityGroupIds:
-      - ${file(../apsecrets.yml):secGroup}
-    subnetIds:
-      - ${file(../apsecrets.yml):subnet1}
-      - ${file(../apsecrets.yml):subnet2}
-      - ${file(../apsecrets.yml):subnet3}
 
 # you can overwrite defaults here
   stage: dev
