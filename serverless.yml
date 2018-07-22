@@ -135,14 +135,18 @@ resources:
 #       Value: "Some output value"
 
 custom:
-  dotnet:
-    slndir: sln/apgames
+  stage: ${opt:stage, self:provider.stage}
+  stageConfig: ${file(../apsecrets.yml):domains.games.${self:custom.stage}}
+  region: ${opt:region, self:provider.region}
   customDomain:
-    domainName: games.abstractplay.com
+    domainName: ${self:custom.stageConfig.domain}
+    certificateName: ${self:custom.stageConfig.cert}
     basepath: ''
-    stage: ${self:provider.stage}
+    stage: ${self:custom.stage}
     createRoute53Record: false
     endpointType: "edge"
+  dotnet:
+    slndir: sln/apgames
   documentation:
     info:
       version: "1"

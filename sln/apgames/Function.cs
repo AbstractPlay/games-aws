@@ -108,7 +108,8 @@ namespace apgames
                     version = Ithaka.meta_version,
                     playercounts = Ithaka.meta_playercounts,
                     description = Ithaka.meta_description,
-                    changelog = Ithaka.meta_changelog
+                    changelog = Ithaka.meta_changelog,
+                    variants = new Variants[0]
                 };
                 response = new APIGatewayProxyResponse
                 {
