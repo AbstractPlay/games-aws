@@ -8,6 +8,10 @@ The [main website](https://www.abstractplay.com) houses the development blog and
 
 ## Change log
 
+08 Dec 2018:
+
+* Archiving this repository. Built-in games are moving into the API itself. The standalone game server idea has to be shelved for the time being. [See the development blog for details.](https://www.abstractplay.com)
+
 10 Jun 2018:
 
 * Moved to [Serverless framework](https://serverless.com) for deployment.
